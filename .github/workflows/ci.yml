@@ -174,4 +174,5 @@ jobs:
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u "${{ github.actor }}" --password-stdin
           helm package deploy/helm/hohe-warte --version "${GITHUB_REF_NAME#v}" --app-version "${GITHUB_REF_NAME#v}"
-          helm push hohe-warte-*.tgz "oci://ghcr.io/${{ github.repository_owner }}/charts"
+          owner="${GITHUB_REPOSITORY_OWNER,,}"   # OCI-Referenzen müssen kleingeschrieben sein
+          helm push hohe-warte-*.tgz "oci://ghcr.io/${owner}/charts"
