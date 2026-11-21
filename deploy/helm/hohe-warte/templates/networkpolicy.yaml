@@ -1,0 +1,28 @@
+{{- if .Values.networkPolicy.enabled }}
+# Default-deny + gezielte Freigaben: Ingress nur aus dem Namespace selbst, vom
+# Ingress-Controller und von Prometheus; Egress nur DNS und HTTPS (GeoSphere API).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "hw.fullname" . }}
+  labels: {{- include "hw.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels: {{- include "hw.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: {{ .Values.networkPolicy.monitoringNamespace }} }
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: ingress-nginx }
+      ports:
+        - { port: 8080, protocol: TCP }
+  egress:
+    - ports:
+        - { port: 53, protocol: UDP }
+        - { port: 53, protocol: TCP }
+    - ports:
+        - { port: 443, protocol: TCP }
+{{- end }}

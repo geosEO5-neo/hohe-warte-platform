@@ -1,0 +1,8 @@
+apiVersion: v2
+name: hohe-warte
+description: GeoSphere-TAWES-Exporter & API – Deployment inkl. Monitoring (ServiceMonitor, Alerts, Dashboard)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+kubeVersion: ">=1.29.0-0"
+keywords: [geosphere, prometheus, exporter, weather]

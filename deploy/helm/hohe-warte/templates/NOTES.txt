@@ -1,0 +1,5 @@
+hohe-warte {{ .Chart.AppVersion }} wurde als Release "{{ .Release.Name }}" in "{{ .Release.Namespace }}" installiert.
+
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "hw.fullname" . }} 8080:{{ .Values.service.port }}
+  curl localhost:8080/api/v1/stations/11035/current
+  curl localhost:8080/metrics/

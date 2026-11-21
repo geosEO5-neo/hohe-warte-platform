@@ -1,0 +1,42 @@
+{{- if and .Values.monitoring.prometheusRule.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: {{ include "hw.fullname" . }}
+  labels:
+    {{- include "hw.labels" . | nindent 4 }}
+    {{- with .Values.monitoring.prometheusRule.labels }}{{ toYaml . | nindent 4 }}{{ end }}
+spec:
+  groups:
+    - name: hohe-warte.rules
+      rules:
+        - alert: HoheWarteDown
+          expr: absent(up{job="{{ include "hw.fullname" . }}"} == 1)
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: "Kein hohe-warte-Pod wird erfolgreich gescrapt"
+            runbook_url: "docs/RUNBOOK.md#hohewartedown"
+        - alert: HoheWarteDataStale
+          expr: time() - max(hohe_warte_last_success_timestamp_seconds) > {{ .Values.config.maxStalenessSeconds }}
+          for: 10m
+          labels: { severity: warning }
+          annotations:
+            summary: "GeoSphere-Daten älter als {{ .Values.config.maxStalenessSeconds }}s"
+            runbook_url: "docs/RUNBOOK.md#hohewartedatastale"
+        - alert: HoheWarteUpstreamErrors
+          expr: |
+            sum(rate(hohe_warte_upstream_requests_total{outcome="error"}[30m]))
+              / sum(rate(hohe_warte_upstream_requests_total[30m])) > 0.5
+          for: 30m
+          labels: { severity: warning }
+          annotations:
+            summary: "Mehr als 50 % der Anfragen an die GeoSphere API schlagen fehl"
+            runbook_url: "docs/RUNBOOK.md#hohewarteupstreamerrors"
+        - alert: HoheWartePodRestarting
+          expr: increase(kube_pod_container_status_restarts_total{container="app", pod=~"{{ include "hw.fullname" . }}-.*"}[15m]) > 2
+          labels: { severity: warning }
+          annotations:
+            summary: "Pod {{ "{{ $labels.pod }}" }} startet wiederholt neu"
+            runbook_url: "docs/RUNBOOK.md#hohewartepodrestarting"
+{{- end }}

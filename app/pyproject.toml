@@ -1,0 +1,36 @@
+[project]
+name = "hohe-warte"
+version = "0.1.0"
+description = "Prometheus-Exporter und REST-API für Messdaten der GeoSphere Austria Data Hub (TAWES)"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi==0.115.6",
+  "uvicorn[standard]==0.32.1",
+  "httpx==0.28.1",
+  "prometheus-client==0.21.1",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==8.3.4", "respx==0.22.0", "ruff==0.8.4"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S104"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]

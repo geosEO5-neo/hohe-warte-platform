@@ -1,0 +1,77 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/OWNER/hohe-warte
+  tag: ""            # Standard: .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+config:
+  stationIds: "11035,11034"     # Wien/Hohe Warte, Wien/Innere Stadt
+  parameters: "TL,RF,FF,P,RR"
+  pollIntervalSeconds: 600
+  maxStalenessSeconds: 1800
+  apiBase: "https://dataset.api.hub.geosphere.at/v1"
+
+serviceAccount:
+  create: true
+  automountToken: false
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  host: hohe-warte.local
+  tls: []
+
+resources:
+  requests: { cpu: 50m, memory: 64Mi }
+  limits: { memory: 128Mi }
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  # Namespace, aus dem Prometheus scrapt
+  monitoringNamespace: monitoring
+
+monitoring:
+  serviceMonitor:
+    enabled: true
+    interval: 60s
+    labels: { release: kube-prometheus-stack }
+  prometheusRule:
+    enabled: true
+    labels: { release: kube-prometheus-stack }
+  grafanaDashboard:
+    enabled: true
+    labels: { grafana_dashboard: "1" }
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,25 @@
+# Schlanke Konfiguration für lokale/CI-Cluster.
+grafana:
+  adminPassword: admin            # nur lokal! In echten Umgebungen via Secret/External Secrets
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      searchNamespace: ALL
+prometheus:
+  prometheusSpec:
+    retention: 2d
+    # ServiceMonitors/PrometheusRules aller Releases mit Label release=kube-prometheus-stack
+    serviceMonitorSelectorNilUsesHelmValues: true
+    ruleSelectorNilUsesHelmValues: true
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+alertmanager:
+  alertmanagerSpec:
+    resources:
+      requests: { cpu: 10m, memory: 32Mi }
+# Control-Plane-Komponenten sind in kind nicht von außen scrapebar
+kubeEtcd: { enabled: false }
+kubeControllerManager: { enabled: false }
+kubeScheduler: { enabled: false }
+kubeProxy: { enabled: false }

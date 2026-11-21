@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "hw.fullname" . }}
+  labels: {{- include "hw.labels" . | nindent 4 }}
+data:
+  STATION_IDS: {{ .Values.config.stationIds | quote }}
+  PARAMETERS: {{ .Values.config.parameters | quote }}
+  POLL_INTERVAL_SECONDS: {{ .Values.config.pollIntervalSeconds | quote }}
+  MAX_STALENESS_SECONDS: {{ .Values.config.maxStalenessSeconds | quote }}
+  GEOSPHERE_API_BASE: {{ .Values.config.apiBase | quote }}

@@ -1,0 +1,9 @@
+__pycache__/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.venv/
+infra/terraform/.terraform/
+infra/terraform/*.tfstate*
+infra/terraform/*-config
+*.tgz
