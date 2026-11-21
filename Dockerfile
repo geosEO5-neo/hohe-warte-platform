@@ -17,10 +17,16 @@ LABEL org.opencontainers.image.title="hohe-warte" \
       org.opencontainers.image.revision="${REVISION}" \
       org.opencontainers.image.licenses="MIT"
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
-RUN groupadd --system --gid 10001 app \
+# Debian-Sicherheitsupdates einspielen (z. B. zlib), danach Paketlisten entfernen
+RUN apt-get update \
+ && apt-get -y upgrade --no-install-recommends \
+ && rm -rf /var/lib/apt/lists/* \
+ && groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app
 COPY --from=build /wheels /wheels
-RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels
+# pip/setuptools werden zur Laufzeit nicht gebraucht -> kleinere Angriffsfläche
+RUN pip install --no-cache-dir /wheels/* && rm -rf /wheels \
+ && pip uninstall -y pip setuptools wheel 2>/dev/null; true
 USER 10001:10001
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \

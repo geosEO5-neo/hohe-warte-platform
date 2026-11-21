@@ -111,12 +111,11 @@ jobs:
           terraform init -input=false
           terraform apply -auto-approve -input=false -var app_image=hohe-warte:e2e -var worker_count=1
           echo "KUBECONFIG=$(terraform output -raw kubeconfig_path)" >> "$GITHUB_ENV"
-      - name: Rollout & helm test
+      - name: Rollout
         run: |
           kubectl get nodes -o wide
           kubectl -n hohe-warte rollout status deploy/hohe-warte --timeout=180s
           kubectl -n hohe-warte get pods,svc,pdb,networkpolicy,servicemonitor,prometheusrule
-          helm -n hohe-warte test hohe-warte --logs
       - name: Prometheus scrapt die App & Alert-Regeln sind geladen
         run: |
           kubectl -n monitoring port-forward svc/kube-prometheus-stack-prometheus 9090:9090 &
@@ -125,15 +124,27 @@ jobs:
             r=$(curl -s 'localhost:9090/api/v1/query' --data-urlencode 'query=count(geosphere_observation)' | jq -r '.data.result[0].value[1] // "0"')
             echo "geosphere_observation series: $r"; [ "$r" != "0" ] && break; sleep 10
           done
+          curl -s localhost:9090/api/v1/targets | jq -r '.data.activeTargets[] | select(.labels.namespace=="hohe-warte") | "\(.labels.job) \(.health) \(.lastError)"'
           [ "$r" != "0" ]
           curl -s localhost:9090/api/v1/rules | jq -e '[.data.groups[] | select(.name=="hohe-warte.rules")] | length == 1'
-          curl -s localhost:9090/api/v1/targets | jq -r '.data.activeTargets[] | select(.labels.namespace=="hohe-warte") | "\(.labels.job) \(.health)"'
+      - name: helm test (Service-Erreichbarkeit innerhalb des Namespaces)
+        run: helm -n hohe-warte test hohe-warte --logs --timeout 3m
       - name: Diagnose bei Fehlern
         if: failure()
         run: |
           kubectl get pods -A
           kubectl -n hohe-warte describe pods
           kubectl -n hohe-warte logs -l app.kubernetes.io/name=hohe-warte --tail=100
+          kubectl -n hohe-warte get networkpolicy -o yaml
+          kubectl -n hohe-warte get pods --show-labels -o wide
+          kubectl -n kube-system logs -l app=kindnet --tail=50 || true
+          echo "--- Isolationstest: curl aus dem Namespace MIT NetworkPolicy"
+          kubectl -n hohe-warte run dbg1 --rm -i --restart=Never --image=curlimages/curl:8.11.1 \
+            --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"dbg1","image":"curlimages/curl:8.11.1","args":["-sS","-m","10","http://hohe-warte/readyz"],"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}' || true
+          kubectl -n hohe-warte delete networkpolicy --all
+          echo "--- Isolationstest: curl OHNE NetworkPolicy"
+          kubectl -n hohe-warte run dbg2 --rm -i --restart=Never --image=curlimages/curl:8.11.1 \
+            --overrides='{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":65534,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"dbg2","image":"curlimages/curl:8.11.1","args":["-sS","-m","10","http://hohe-warte/readyz"],"securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}' || true
       - name: terraform destroy
         if: always()
         working-directory: infra/terraform
