@@ -2,7 +2,12 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: {{ include "hw.fullname" . }}-test
-  labels: {{- include "hw.labels" . | nindent 4 }}
+  # Bewusst OHNE die Selector-Labels der App: sonst würde der Test-Pod selbst von
+  # Service, PDB und der Egress-NetworkPolicy der App erfasst.
+  labels:
+    app.kubernetes.io/name: {{ include "hw.name" . }}-test
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: helm-test
   annotations:
     "helm.sh/hook": test
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
