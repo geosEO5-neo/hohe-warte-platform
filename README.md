@@ -49,7 +49,7 @@ Details: [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md) · Alerts: [docs/RUNBOOK.md]
 
 ## Schnellstart
 
-Voraussetzungen: Docker, kind, kubectl, Helm, Terraform ≥ 1.6.
+Voraussetzungen: Docker, kind ≥ 0.33 (für Kubernetes 1.36), kubectl, Helm, Terraform ≥ 1.6.
 
 ```bash
 make up          # Image bauen, kind-Cluster + Monitoring + App provisionieren (~5 min)

@@ -82,7 +82,7 @@ jobs:
           curl -fsS localhost:8080/metrics/ | grep geosphere_observation
           docker inspect --format '{{.Config.User}}' hohe-warte:ci | grep -q 10001
       - name: Trivy-Schwachstellenscan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0 (per SHA gepinnt)
         with:
           image-ref: hohe-warte:ci
           severity: CRITICAL,HIGH
@@ -101,7 +101,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with: { context: ., load: true, tags: "hohe-warte:e2e", cache-from: type=gha }
       - uses: helm/kind-action@v1
-        with: { install_only: true }
+        with: { install_only: true, version: v0.33.0 }
       - uses: azure/setup-helm@v4
       - uses: hashicorp/setup-terraform@v3
         with: { terraform_version: "1.9.8", terraform_wrapper: false }
