@@ -45,7 +45,7 @@ flowchart LR
   classDef p fill:#eee,stroke:#999
 ```
 
-Details: [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md) · Alerts: [docs/RUNBOOK.md](docs/RUNBOOK.md)
+Details: [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md) · Alerts: [docs/RUNBOOK.md](docs/RUNBOOK.md) · Fehleranalysen: [docs/LESSONS-LEARNED.md](docs/LESSONS-LEARNED.md)
 
 ## Schnellstart
 
